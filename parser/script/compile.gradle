@@ -1,0 +1,64 @@
+apply plugin: 'java'
+
+final String board = 'arduino:avr:nano:cpu=atmega328';
+final String port = 'COM9'
+
+evaluationDependsOn(':parser')
+
+dependencies {
+    compile project(':parser')
+}
+
+File getBuildDirArduino() {
+    String fileNameWithoutExec = getFileNameWithoutExec()
+    return file("$buildDir/arduino/build/$fileNameWithoutExec")
+}
+
+File getInoFile() {
+    def fileNameWithoutExec = getFileNameWithoutExec()
+    return file("$buildDir/arduino/src/$fileNameWithoutExec/${fileNameWithoutExec}.ino")
+}
+
+// $buildDir/arduino/src/$fileName/$fileName.ino
+// $buildDir/arduino/build/
+task createBuildDir {
+    doFirst {
+        def arduinoWorkDir = file("$buildDir/arduino")
+        if (arduinoWorkDir.exists()) {
+            arduinoWorkDir.deleteDir();
+        }
+        arduinoWorkDir.mkdirs();
+        getBuildDirArduino().mkdirs();
+    }
+}
+
+task generateIno(type: JavaExec, dependsOn: createBuildDir) {
+    doFirst {
+        args getJavaSrcFile(), getInoFile().toString(), "$buildDir/classes/main", "../parser/build/classes/main"
+    }
+
+    main = 'com.timreset.arduino.parser.Parser'
+    classpath = project(':parser').sourceSets.main.runtimeClasspath
+}
+
+String getFileNameWithoutExec() {
+    return ("$CLASS_NAME" =~ /.+\.(\w+)/)[0][1]
+}
+
+String getJavaSrcFile() {
+    return "src/main/java/" + "$CLASS_NAME".replaceAll("\\.", "/") + ".java"
+}
+
+task verify(type: Exec, dependsOn: generateIno) {
+    doFirst {
+        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--verify', '--verbose', '--board', board, "--pref", "build.path=" + getBuildDirArduino(),
+                getInoFile()
+    }
+}
+
+task upload(type: Exec, dependsOn: generateIno) {
+    doFirst {
+        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--upload', '--verbose', '--board', board, '--port', port, "--pref", "build.path=" + getBuildDirArduino(),
+                getInoFile()
+    }
+} 

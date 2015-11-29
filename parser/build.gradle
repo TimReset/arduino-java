@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+//    compile 'org.eclipse.jdt:org.eclipse.jdt.core:3.10.0'
+    compile 'org.eclipse.tycho:org.eclipse.jdt.core:3.11.1.v20150902-1521'
+    compile 'org.eclipse.core:org.eclipse.core.runtime:3.7.0'
+    compile 'org.eclipse.core:resources:3.3.0-v20070604'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'com.google.guava:guava:18.0'
+
+    testCompile 'junit:junit:4.12'
+
+//    compile 'org.eclipse.tycho:org.eclipse.jdt.core:3.11.0.v20150602-1242'
+//    compile 'org.eclipse.tycho:org.eclipse.jdt.core:3.10.0.v20140604-1726'
+}
