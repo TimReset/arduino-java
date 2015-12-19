@@ -48,7 +48,7 @@ String getFileNameWithoutExec() {
 String getJavaSrcFile() {
     return "src/main/java/" + "$CLASS_NAME".replaceAll("\\.", "/") + ".java"
 }
-
+//https://github.com/arduino/Arduino/blob/ide-1.5.x/build/shared/manpage.adoc
 task verify(type: Exec, dependsOn: generateIno) {
     doFirst {
         commandLine "$ARDUINO_HOME/arduino_debug.exe", '--verify', '--verbose', '--board', board, "--pref", "build.path=" + getBuildDirArduino(),
