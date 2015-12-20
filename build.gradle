@@ -1,0 +1,8 @@
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    apply plugin: 'java'
+    compileJava.options.encoding = 'UTF-8'
+}

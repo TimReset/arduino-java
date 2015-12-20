@@ -14,6 +14,10 @@ File getBuildDirArduino() {
     return file("$buildDir/arduino/build/$fileNameWithoutExec")
 }
 
+File getSketchDirArduino() {
+    return file("$buildDir/arduino/src")
+}
+
 File getInoFile() {
     def fileNameWithoutExec = getFileNameWithoutExec()
     return file("$buildDir/arduino/src/$fileNameWithoutExec/${fileNameWithoutExec}.ino")
@@ -21,7 +25,7 @@ File getInoFile() {
 
 // $buildDir/arduino/src/$fileName/$fileName.ino
 // $buildDir/arduino/build/
-task createBuildDir {
+task createBuildDir(dependsOn: classes) {
     doFirst {
         def arduinoWorkDir = file("$buildDir/arduino")
         if (arduinoWorkDir.exists()) {
@@ -32,11 +36,16 @@ task createBuildDir {
     }
 }
 
-task generateIno(type: JavaExec, dependsOn: createBuildDir) {
-    doFirst {
-        args getJavaSrcFile(), getInoFile().toString(), "$buildDir/classes/main", "../parser/build/classes/main"
-    }
+task copyArduinoLibs(type: Copy, dependsOn: createBuildDir) {
+    from project(':parser').file("src/main/c")
+    //Arduino will be find libraries in a folder "libraries" in the sketch directory. 
+    into new File(getSketchDirArduino(), "libraries")
+}
 
+task generateIno(type: JavaExec, dependsOn: copyArduinoLibs) {
+    doFirst {
+        args getJavaSrcFile(), getInoFile().toString(), "$buildDir/classes/main", project(':parser').file("build/classes/main")
+    }
     main = 'com.timreset.arduino.parser.Parser'
     classpath = project(':parser').sourceSets.main.runtimeClasspath
 }
@@ -51,14 +60,17 @@ String getJavaSrcFile() {
 //https://github.com/arduino/Arduino/blob/ide-1.5.x/build/shared/manpage.adoc
 task verify(type: Exec, dependsOn: generateIno) {
     doFirst {
-        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--verify', '--verbose', '--board', board, "--pref", "build.path=" + getBuildDirArduino(),
+        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--verify', '--verbose', '--board', board,
+                "--pref", "build.path=" + getBuildDirArduino(),
+                "--pref", "sketchbook.path=" + getSketchDirArduino(),
                 getInoFile()
     }
 }
 
 task upload(type: Exec, dependsOn: generateIno) {
     doFirst {
-        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--upload', '--verbose', '--board', board, '--port', port, "--pref", "build.path=" + getBuildDirArduino(),
+        commandLine "$ARDUINO_HOME/arduino_debug.exe", '--upload', '--verbose', '--board', board, '--port', port,
+                "--pref", "build.path=" + getBuildDirArduino(),
                 getInoFile()
     }
 } 

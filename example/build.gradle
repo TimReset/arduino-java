@@ -1,4 +1,3 @@
-apply plugin: 'java'
 apply from: '../parser/script/compile.gradle'
 
 dependencies {
